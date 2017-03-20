@@ -41,7 +41,6 @@ def build_board(stdscr):
     board_y = get_dimension(stdscr, "height")
 
     board = [[0 for x in range(board_x)] for y in range(board_y)]
-    win = curses.newwin(board_y, (2 * board_x), 0, 0)
     return board
 
 

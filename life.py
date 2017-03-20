@@ -2,6 +2,9 @@ import sys
 import curses
 from curses import wrapper
 
+# Minimum board width/height:
+MIN_DIMENSION = 3
+
 # How cells are represented internally.
 DEAD = 0
 ALIVE = 1
@@ -64,10 +67,10 @@ def get_dimension(stdscr, name="width"):
             stdscr.addstr("Enter the board %s: " % name)
             value = int(stdscr.getstr())
             stdscr.clear()
-            assert value > 0
+            assert value >= MIN_DIMENSION
         except (ValueError, AssertionError):
-            stdscr.addstr("Please use a positive integer for board %s.\n"
-                    % name)
+            stdscr.addstr("Board %s must be at least %d.\n"
+                    % (name, MIN_DIMENSION))
             continue
         curses.noecho()
         return value

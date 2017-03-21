@@ -161,11 +161,11 @@ def interact(stdscr, board):
         elif c == ord('s'):
             step(board)
             update_display(stdscr, board)
-            stdscr.move(y,x)
+            stdscr.move(y,x*2)
         elif c == curses.KEY_ENTER or c == 10 or c == 13:
             switch_cell(board, x, y)
             update_display(stdscr, board)
-            stdscr.move(y,x)
+            stdscr.move(y,x*2)
         elif c == ord('q'):
             sys.exit()
 

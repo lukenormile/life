@@ -2,8 +2,13 @@ import sys
 import curses
 from curses import wrapper
 
-DEAD_CELL = 'O'
-LIVE_CELL = 'X'
+# Cell values as represented internally.
+DEAD = 0
+ALIVE = 1
+
+# Cell values as printed to the screen.
+LIVE_PRINTCHAR = 'X'
+DEAD_PRINTCHAR = 'O'
 
 # Prepare the board to be overwritten by returning cursor
 # to the top of the board.

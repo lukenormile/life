@@ -62,9 +62,6 @@ def update_cell(board, x, y):
         else:
             return ALIVE
 
-def reset_board(board):
-
-
 def step(board):
     new_board = copy.deepcopy(board)
     for x, col in enumerate(board):
@@ -89,6 +86,11 @@ def switch_cell(board, x, y):
         board[x][y] = DEAD
     else:
         board[x][y] = ALIVE
+
+def reset_board(board):
+    for x, col in enumerate(board):
+        for y, cell in enumerate(col):
+            board[x][y] = DEAD
 
 def interact(stdscr, board):
     x = 0
@@ -120,6 +122,10 @@ def interact(stdscr, board):
             stdscr.move(y,x*2)
         elif c == curses.KEY_ENTER or c == 10 or c == 13:
             switch_cell(board, x, y)
+            update_display(stdscr, board)
+            stdscr.move(y,x*2)
+        elif c == ord('r'):
+            reset_board(board)
             update_display(stdscr, board)
             stdscr.move(y,x*2)
         elif c == ord('R'):

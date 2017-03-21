@@ -2,6 +2,32 @@ import sys
 import curses
 from curses import wrapper
 
+# Cell values as represented internally.
+DEAD = 0
+ALIVE = 1
+
+# Cell values as printed to the screen.
+LIVE_PRINTCHAR = 'X'
+DEAD_PRINTCHAR = 'O'
+
+# Values for determining the next state of a cell.
+MIN_STAY_ALIVE = 2
+MAX_STAY_ALIVE = 3
+MIN_COME_ALIVE = 3
+MAX_COME_ALIVE = 3
+
+def update_display(stdscr, board):
+    for x_index, x_val in enumerate(board):
+        for y_index, y_val in enumerate(x_val):
+            if y_val == ALIVE:
+                stdscr.addstr(y_index,
+                        (x_index * 2),
+                        LIVE_PRINTCHAR)
+            else:
+                stdscr.addstr(y_index,
+                        (x_index * 2),
+                        DEAD_PRINTCHAR)
+
 # Minimum board width/height:
 MIN_DIMENSION = 3
 
@@ -27,16 +53,6 @@ def print_board(board):
             else:
                 print(DEAD_PRINTCHAR, end = ' ')
         print()
-
-def count_neighbors(board, x, y):
-    neighbors = board[x-1][y-1] \
-        + board[x-1][y]         \
-        + board[x-1][y+1]       \
-        + board[x][y-1]         \
-        + board[x][y+1]         \
-        + board[x+1][y-1]       \
-        + board[x+1][y]         \
-        + board[x+1][y+1]
 
 def update_cell(board, x, y):
     neighbor_count = count_neighbors(board, x, y)
@@ -79,14 +95,87 @@ def build_board(stdscr):
     board_x = get_dimension(stdscr, "width")
     board_y = get_dimension(stdscr, "height")
 
-    board = [[0 for x in range(board_x)] for y in range(board_y)]
+    board = [[0 for y in range(board_y)] for x in range(board_x)]
     return board
 
+def count_neighbors(board, x, y):
+    left =  (x-1) % len(board)
+    right = (x+1) % len(board)
+    up =    (y-1) % len(board[0])
+    down =  (y+1) % len(board[0])
+    neighbors = board[left][up]  \
+            + board[left] [y]    \
+            + board[left] [down] \
+            + board[x]    [up]   \
+            + board[x]    [down] \
+            + board[right][up]   \
+            + board[right][y]    \
+            + board[right][down]
+    return neighbors
+
+def switch_cell(board, x, y):
+    if board[x][y] == ALIVE:
+        board[x][y] = DEAD
+    else:
+        board[x][y] = ALIVE
+
+def update_cell(board, x, y):
+    cell = board[x][y]
+    neighbors = count_neighbors(board, x, y)
+    if cell == ALIVE:
+        if neighbors < MIN_STAY_ALIVE or neighbors > MAX_STAY_ALIVE:
+            return DEAD
+        else:
+            return ALIVE
+    else:
+        if neighbors < MIN_COME_ALIVE or neighbors > MAX_COME_ALIVE:
+            return DEAD
+        else:
+            return ALIVE
+
+def step(board):
+    next_board = board
+    for x_index, col in enumerate(board):
+        for y_index, cell in enumerate(col):
+            next_board[x_index][y_index] = update_cell(board, x_index, y_index)
+    return next_board
+
+def interact(stdscr, board):
+    x = 0
+    y = 0
+    stdscr.move(y,x*2)
+    while True:
+        c = stdscr.getch()
+        if c == curses.KEY_DOWN:
+            y += 1
+            stdscr.move(y,x*2)
+        elif c == curses.KEY_UP:
+            y -= 1
+            stdscr.move(y,x*2)
+        elif c == curses.KEY_LEFT:
+            x -= 1
+            stdscr.move(y,x*2)
+        elif c == curses.KEY_RIGHT:
+            x += 1
+            stdscr.move(y,x*2)
+        elif c == ord('s'):
+            step(board)
+            update_display(stdscr, board)
+            stdscr.move(y,x)
+        elif c == curses.KEY_ENTER or c == 10 or c == 13:
+            switch_cell(board, x, y)
+            update_display(stdscr, board)
+            stdscr.move(y,x)
+        elif c == ord('q'):
+            sys.exit()
 
 def main(stdscr):
     stdscr.clear()
 
     board = build_board(stdscr)
+    while True:
+        update_display(stdscr, board)
+        interact(stdscr, board)
 
     stdscr.refresh()
     stdscr.getkey()

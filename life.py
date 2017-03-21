@@ -146,16 +146,16 @@ def interact(stdscr, board):
     stdscr.move(y,x*2)
     while True:
         c = stdscr.getch()
-        if c == curses.KEY_DOWN:
+        if c == curses.KEY_DOWN or c == ord('j'):
             y += 1
             stdscr.move(y,x*2)
-        elif c == curses.KEY_UP:
+        elif c == curses.KEY_UP or c == ord('k'):
             y -= 1
             stdscr.move(y,x*2)
-        elif c == curses.KEY_LEFT:
+        elif c == curses.KEY_LEFT or c == ord('h'):
             x -= 1
             stdscr.move(y,x*2)
-        elif c == curses.KEY_RIGHT:
+        elif c == curses.KEY_RIGHT or c == ord('l'):
             x += 1
             stdscr.move(y,x*2)
         elif c == ord('s'):

@@ -11,14 +11,17 @@ def reset_board(board):
     for row in board:
         sys.stdout.write("\033[F")
 
-def print_board(board):
-    for row in board:
-        for cell in row:
-            if cell:
-                print(LIVE_CELL, end = ' ')
+def update_display(stdscr, board):
+    for x_index, x_val in enumerate(board):
+        for y_index, y_val in enumerate(x_val):
+            if y_val == ALIVE:
+                stdscr.addstr(y_index,
+                        (x_index * 2),
+                        LIVE_PRINTCHAR)
             else:
-                print(DEAD_CELL, end = ' ')
-        print()
+                stdscr.addstr(y_index,
+                        (x_index * 2),
+                        DEAD_PRINTCHAR)
 
 # Get a board dimension value from the user.
 def get_dimension(stdscr, name="width"):
@@ -40,7 +43,7 @@ def build_board(stdscr):
     board_x = get_dimension(stdscr, "width")
     board_y = get_dimension(stdscr, "height")
 
-    board = [[0 for x in range(board_x)] for y in range(board_y)]
+    board = [[0 for y in range(board_y)] for x in range(board_x)]
     return board
 
 
@@ -48,6 +51,7 @@ def main(stdscr):
     stdscr.clear()
 
     board = build_board(stdscr)
+    update_display(stdscr, board)
 
     stdscr.refresh()
     stdscr.getkey()

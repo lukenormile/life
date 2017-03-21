@@ -22,11 +22,13 @@ def update_display(stdscr, board):
             if y_val == ALIVE:
                 stdscr.addstr(y_index,
                         (x_index * 2),
-                        LIVE_PRINTCHAR)
+                        LIVE_PRINTCHAR,
+                        curses.COLOR_GREEN)
             else:
                 stdscr.addstr(y_index,
                         (x_index * 2),
-                        DEAD_PRINTCHAR)
+                        DEAD_PRINTCHAR,
+                        curses.COLOR_BLACK)
 
 # Minimum board width/height:
 MIN_DIMENSION = 3

@@ -87,9 +87,15 @@ def switch_cell(board, x, y):
     else:
         board[x][y] = ALIVE
 
+def reset_board(board):
+    for x, col in enumerate(board):
+        for y, cell in enumerate(col):
+            board[x][y] = DEAD
+
 def interact(stdscr, board):
     x = 0
     y = 0
+    board_copy = board
     stdscr.move(y,x*2)
     while True:
         c = stdscr.getch()
@@ -106,13 +112,24 @@ def interact(stdscr, board):
             x += 1
             stdscr.move(y,x*2)
         elif c == ord('s'):
+            board_copy = copy.deepcopy(board)
             board = step(board)
+            update_display(stdscr, board)
+            stdscr.move(y,x*2)
+        elif c == ord('u'):
+            board = board_copy
             update_display(stdscr, board)
             stdscr.move(y,x*2)
         elif c == curses.KEY_ENTER or c == 10 or c == 13:
             switch_cell(board, x, y)
             update_display(stdscr, board)
             stdscr.move(y,x*2)
+        elif c == ord('r'):
+            reset_board(board)
+            update_display(stdscr, board)
+            stdscr.move(y,x*2)
+        elif c == ord('R'):
+            main(stdscr)
         elif c == ord('q'):
             sys.exit()
 
@@ -121,7 +138,8 @@ def get_dimension(stdscr, name="width"):
     curses.echo() # Enable echoing of user input.
     while True:
         try:
-            stdscr.addstr("Enter the board %s: " % name)
+            stdscr.clear()
+            stdscr.addstr(0, 0, "Enter the board %s: " % name)
             value = int(stdscr.getstr())
             stdscr.clear()
             assert value >= MIN_DIMENSION

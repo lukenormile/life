@@ -55,9 +55,19 @@ def step(board):
             new_board[x][y] = update_cell(board, x, y)
     return new_board
 
+def update_info_window(alive, dead, info_window):
+    info_window.clear()
+    total = alive + dead
+    alive_percent = (100 * alive/total)
+    dead_percent  = (100 *  dead/total)
+    alive_str = "%d alive (%3.2f%%)" % (alive, alive_percent)
+    dead_str  = "%d dead (%3.2f%%)"  % (dead,  dead_percent)
+    info_window.addstr(0, 0, alive_str)
+    info_window.addstr(1, 0,  dead_str)
+    info_window.refresh()
+
 def update_display(board, display):
     board_window = display[1]
-    info_window = display[2]
     alive = dead = 0;
     for x_index, x_val in enumerate(board):
         for y_index, y_val in enumerate(x_val):
@@ -71,13 +81,9 @@ def update_display(board, display):
                         (x_index * 2),
                         DEAD_PRINTCHAR)
                 dead += 1;
-    total = alive + dead
-    alive_percent = " (" + str(100*alive/total) + "%" + ")"
-    dead_percent = " (" + str(100*dead/total) + "%" + ")"
-    info_window.addstr(0, 0, str(alive) + " alive" + alive_percent)
-    info_window.addstr(1, 0, str(dead) + " dead" + dead_percent)
     board_window.refresh()
-    info_window.refresh()
+    info_window = display[2]
+    update_info_window(alive, dead, info_window)
 
 def switch_cell(board, x, y):
     if board[x][y] == ALIVE:
@@ -172,7 +178,7 @@ def main(stdscr):
     stdscr.clear()
     stdscr.refresh()
     board_window = curses.newwin(len(board[0]), (len(board) * 2))
-    info_window = curses.newwin(2, 20, 0, (len(board) * 2) + 1)
+    info_window = curses.newwin(2, 25, 0, (len(board) * 2) + 1)
     instruction_window = curses.newwin(4, 53, 2, (len(board) * 2) + 1)
     print_instructions(instruction_window)
     display = (stdscr, board_window, info_window)

@@ -1,6 +1,7 @@
 import sys
 import curses
 from curses import wrapper
+import copy
 
 # Cell values as represented internally.
 DEAD = 0
@@ -16,89 +17,8 @@ MAX_STAY_ALIVE = 3
 MIN_COME_ALIVE = 3
 MAX_COME_ALIVE = 3
 
-def update_display(stdscr, board):
-    for x_index, x_val in enumerate(board):
-        for y_index, y_val in enumerate(x_val):
-            if y_val == ALIVE:
-                stdscr.addstr(y_index,
-                        (x_index * 2),
-                        LIVE_PRINTCHAR,
-                        curses.COLOR_GREEN)
-            else:
-                stdscr.addstr(y_index,
-                        (x_index * 2),
-                        DEAD_PRINTCHAR,
-                        curses.COLOR_BLACK)
-
 # Minimum board width/height:
 MIN_DIMENSION = 3
-
-# How cells are represented internally.
-DEAD = 0
-ALIVE = 1
-
-# How cells are formatted when printed.
-DEAD_PRINTCHAR = 'O'
-LIVE_PRINTCHAR = 'X'
-
-# Configurable constants for behavior of cells.
-MIN_TO_STAY_ALIVE = 2
-MAX_TO_STAY_ALIVE = 3
-MIN_TO_COME_ALIVE = 3
-MAX_TO_COME_ALIVE = 3
-
-def print_board(board):
-    for row in board:
-        for cell in row:
-            if cell:
-                print(LIVE_PRINTCHAR, end = ' ')
-            else:
-                print(DEAD_PRINTCHAR, end = ' ')
-        print()
-
-def update_cell(board, x, y):
-    neighbor_count = count_neighbors(board, x, y)
-    if board[x][y] == DEAD:
-        if neighbor_count >= MIN_TO_COME_ALIVE \
-                and neighbor_count <= MAX_TO_COME_ALIVE:
-                    return ALIVE
-        else:
-            return DEAD
-    else:
-        if neighbor_count >= MIN_TO_STAY_ALIVE \
-                and neighbor_count <= MAX_TO_STAY_ALIVE:
-                    return ALIVE
-        else:
-            return DEAD
-
-def step(board):
-    new_board = board
-    for x in range(board_x):
-        for y in range(board_y):
-            update_cell(board, x, y)
-
-# Get a board dimension value from the user.
-def get_dimension(stdscr, name="width"):
-    curses.echo() # Enable echoing of user input.
-    while True:
-        try:
-            stdscr.addstr("Enter the board %s: " % name)
-            value = int(stdscr.getstr())
-            stdscr.clear()
-            assert value >= MIN_DIMENSION
-        except (ValueError, AssertionError):
-            stdscr.addstr("Board %s must be at least %d.\n"
-                    % (name, MIN_DIMENSION))
-            continue
-        curses.noecho()
-        return value
-
-def build_board(stdscr):
-    board_x = get_dimension(stdscr, "width")
-    board_y = get_dimension(stdscr, "height")
-
-    board = [[0 for y in range(board_y)] for x in range(board_x)]
-    return board
 
 def count_neighbors(board, x, y):
     left =  (x-1) % len(board)
@@ -115,16 +35,9 @@ def count_neighbors(board, x, y):
             + board[right][down]
     return neighbors
 
-def switch_cell(board, x, y):
-    if board[x][y] == ALIVE:
-        board[x][y] = DEAD
-    else:
-        board[x][y] = ALIVE
-
 def update_cell(board, x, y):
-    cell = board[x][y]
     neighbors = count_neighbors(board, x, y)
-    if cell == ALIVE:
+    if board[x][y] == ALIVE:
         if neighbors < MIN_STAY_ALIVE or neighbors > MAX_STAY_ALIVE:
             return DEAD
         else:
@@ -136,50 +49,141 @@ def update_cell(board, x, y):
             return ALIVE
 
 def step(board):
-    next_board = board
-    for x_index, col in enumerate(board):
-        for y_index, cell in enumerate(col):
-            next_board[x_index][y_index] = update_cell(board, x_index, y_index)
-    return next_board
+    new_board = copy.deepcopy(board)
+    for x, col in enumerate(board):
+        for y, cell in enumerate(col):
+            new_board[x][y] = update_cell(board, x, y)
+    return new_board
 
-def interact(stdscr, board):
-    x = 0
-    y = 0
-    stdscr.move(y,x*2)
+def update_info_window(alive, dead, info_window):
+    info_window.clear()
+    total = alive + dead
+    alive_percent = (100 * alive/total)
+    dead_percent  = (100 *  dead/total)
+    alive_str = "%d alive (%3.2f%%)" % (alive, alive_percent)
+    dead_str  = "%d dead (%3.2f%%)"  % (dead,  dead_percent)
+    info_window.addstr(0, 0, alive_str)
+    info_window.addstr(1, 0,  dead_str)
+    info_window.refresh()
+
+def update_display(board, display):
+    board_window = display[1]
+    alive = dead = 0;
+    for x_index, x_val in enumerate(board):
+        for y_index, y_val in enumerate(x_val):
+            if y_val == ALIVE:
+                board_window.addch(y_index,
+                        (x_index * 2),
+                        LIVE_PRINTCHAR)
+                alive += 1;
+            else:
+                board_window.addch(y_index,
+                        (x_index * 2),
+                        DEAD_PRINTCHAR)
+                dead += 1;
+    board_window.refresh()
+    info_window = display[2]
+    update_info_window(alive, dead, info_window)
+
+def switch_cell(board, x, y):
+    if board[x][y] == ALIVE:
+        board[x][y] = DEAD
+    else:
+        board[x][y] = ALIVE
+
+def reset_board(board):
+    for x in enumerate(board):
+        for y in enumerate(col):
+            board[x][y] = DEAD
+
+def interact(board, display):
+    stdscr = display[0]
+    board_window = display[1]
+    info_window = display[2]
+    x = y = 0
+    board_copy = board
+    board_window.move(y,x*2)
     while True:
-        c = stdscr.getch()
-        if c == curses.KEY_DOWN:
+        c = board_window.getch()
+        if c == curses.KEY_DOWN or c == ord('j'):
             y += 1
-            stdscr.move(y,x*2)
-        elif c == curses.KEY_UP:
+            board_window.move(y,x*2)
+        elif c == curses.KEY_UP or c == ord('k'):
             y -= 1
-            stdscr.move(y,x*2)
-        elif c == curses.KEY_LEFT:
+            board_window.move(y,x*2)
+        elif c == curses.KEY_LEFT or c == ord('h'):
             x -= 1
-            stdscr.move(y,x*2)
-        elif c == curses.KEY_RIGHT:
+            board_window.move(y,x*2)
+        elif c == curses.KEY_RIGHT or c == ord('l'):
             x += 1
-            stdscr.move(y,x*2)
+            board_window.move(y,x*2)
         elif c == ord('s'):
-            step(board)
-            update_display(stdscr, board)
-            stdscr.move(y,x)
+            board_copy = copy.deepcopy(board)
+            board = step(board)
+            update_display(board, display)
+            board_window.move(y,x*2)
+        elif c == ord('u'):
+            board = board_copy
+            update_display(board, display)
+            board_window.move(y,x*2)
         elif c == curses.KEY_ENTER or c == 10 or c == 13:
             switch_cell(board, x, y)
-            update_display(stdscr, board)
-            stdscr.move(y,x)
+            update_display(board, display)
+            board_window.move(y,x*2)
+        elif c == ord('r'):
+            reset_board(board)
+            update_display(board, display)
+            board_window.move(y,x*2)
+        elif c == ord('R'):
+            main(stdscr)
         elif c == ord('q'):
             sys.exit()
 
+# Get a board dimension value from the user.
+def get_dimension(window, label):
+    curses.echo() # Enable echoing of user input.
+    while True:
+        try:
+            window.clear()
+            window.addstr(0, 0, "Enter the board %s: " % label)
+            value = int(window.getstr())
+            window.clear()
+            assert value >= MIN_DIMENSION
+        except (ValueError, AssertionError):
+            window.addstr("Board %s must be at least %d.\n"
+                    % (label, MIN_DIMENSION))
+            continue
+        curses.noecho()
+        return value
+
+def build_board(board_window):
+    board_x = get_dimension(board_window, "width")
+    board_y = get_dimension(board_window, "height")
+    board = [[0 for y in range(board_y)] for x in range(board_x)]
+    return board
+
+def print_instructions(instruction_window):
+    instruction_window.clear()
+    instruction_1 = "Press 'q' to quit."
+    instruction_2 = "Press 'r' to reset the board with the same dimensions."
+    instruction_3 = "Press 'R' to reset the game completely"
+    instruction_window.addstr(1, 0, instruction_1)
+    instruction_window.addstr(2, 0, instruction_2)
+    instruction_window.addstr(3, 0, instruction_3)
+    instruction_window.refresh()
+
 def main(stdscr):
     stdscr.clear()
-
     board = build_board(stdscr)
-    while True:
-        update_display(stdscr, board)
-        interact(stdscr, board)
-
+    stdscr.clear()
     stdscr.refresh()
-    stdscr.getkey()
+    board_window = curses.newwin(len(board[0]), (len(board) * 2))
+    info_window = curses.newwin(2, 25, 0, (len(board) * 2) + 1)
+    instruction_window = curses.newwin(4, 53, 2, (len(board) * 2) + 1)
+    print_instructions(instruction_window)
+    display = (stdscr, board_window, info_window)
+    while True:
+        update_display(board, display)
+        interact(board, display)
 
 wrapper(main)

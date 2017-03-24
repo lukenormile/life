@@ -74,12 +74,14 @@ def update_display(board, display):
             if y_val == ALIVE:
                 board_window.addch(y_index,
                         (x_index * 2),
-                        LIVE_PRINTCHAR)
+                        LIVE_PRINTCHAR,
+                        curses.color_pair(2))
                 alive += 1;
             else:
                 board_window.addch(y_index,
                         (x_index * 2),
-                        DEAD_PRINTCHAR)
+                        DEAD_PRINTCHAR,
+                        curses.color_pair(3))
                 dead += 1;
     board_window.refresh()
     info_window = display[2]
@@ -172,7 +174,14 @@ def print_instructions(instruction_window):
     instruction_window.addstr(3, 0, instruction_3)
     instruction_window.refresh()
 
+def init_colors():
+    curses.start_color()
+    curses.use_default_colors()
+    for i in range(0, curses.COLORS):
+        curses.init_pair((i + 1), i, -1)
+
 def main(stdscr):
+    init_colors()
     stdscr.clear()
     board = build_board(stdscr)
     stdscr.clear()

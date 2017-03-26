@@ -94,8 +94,8 @@ def switch_cell(board, x, y):
         board[x][y] = ALIVE
 
 def reset_board(board):
-    for x in enumerate(board):
-        for y in enumerate(col):
+    for x, col in enumerate(board):
+        for y, cell in enumerate(col):
             board[x][y] = DEAD
 
 def interact(board, display):

@@ -109,33 +109,33 @@ def interact(board, display):
         c = board_window.getch()
         if c == curses.KEY_DOWN or c == ord('j'):
             y += 1
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == curses.KEY_UP or c == ord('k'):
             y -= 1
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == curses.KEY_LEFT or c == ord('h'):
             x -= 1
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == curses.KEY_RIGHT or c == ord('l'):
             x += 1
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == ord('s'):
             board_copy = copy.deepcopy(board)
             board = step(board)
             update_display(board, display)
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == ord('u'):
             board = board_copy
             update_display(board, display)
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == curses.KEY_ENTER or c == 10 or c == 13:
             switch_cell(board, x, y)
             update_display(board, display)
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == ord('r'):
             reset_board(board)
             update_display(board, display)
-            board_window.move(y,x*2)
+            board_window.move(y % len(board[0]), ((x*2) % (len(board) * 2)))
         elif c == ord('R'):
             main(stdscr)
         elif c == ord('q'):

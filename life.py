@@ -75,13 +75,13 @@ def update_display(board, display):
                 board_window.addch(y_index,
                         (x_index * 2),
                         LIVE_PRINTCHAR,
-                        curses.color_pair(2))
+                        curses.color_pair(8))
                 alive += 1;
             else:
                 board_window.addch(y_index,
                         (x_index * 2),
                         DEAD_PRINTCHAR,
-                        curses.color_pair(3))
+                        curses.color_pair(2))
                 dead += 1;
     board_window.refresh()
     info_window = display[2]
